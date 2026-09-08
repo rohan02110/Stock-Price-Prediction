@@ -72,25 +72,27 @@ st.sidebar.title("🔍 Model & Asset Selector")
 
 # Preset Recent IPOs and Major Equities
 IPO_PRESETS = {
+    "ITC Limited (ITC.NS)": "ITC.NS",
+    "Reliance Industries (RELIANCE.NS)": "RELIANCE.NS",
     "Swiggy Ltd. (SWIGGY.NS)": "SWIGGY.NS",
     "Hyundai Motor India (HYUNDAI.NS)": "HYUNDAI.NS",
     "Bajaj Housing Finance (BAJAJHFL.NS)": "BAJAJHFL.NS",
-    "Ola Electric (OLAELC.NS)": "OLAELC.NS",
+    "Tata Motors (TATAMOTORS.NS)": "TATAMOTORS.NS",
     "Tata Technologies (TATATECH.NS)": "TATATECH.NS",
-    "IREDA (IREDA.NS)": "IREDA.NS",
-    "Jio Financial Services (JIOFIN.NS)": "JIOFIN.NS",
+    "Infosys Ltd. (INFY.NS)": "INFY.NS",
     "Zomato Ltd. (ZOMATO.NS)": "ZOMATO.NS",
+    "Jio Financial Services (JIOFIN.NS)": "JIOFIN.NS",
+    "IREDA (IREDA.NS)": "IREDA.NS",
+    "Ola Electric (OLAELC.NS)": "OLAELC.NS",
     "Paytm / One97 (PAYTM.NS)": "PAYTM.NS",
     "Nykaa (NYKAA.NS)": "NYKAA.NS",
-    "Reliance Industries (RELIANCE.NS)": "RELIANCE.NS",
-    "Tata Motors (TATAMOTORS.NS)": "TATAMOTORS.NS",
     "Custom Ticker (Enter Below)": "CUSTOM"
 }
 
-selected_preset = st.sidebar.selectbox("Select Target IPO / Equity:", list(IPO_PRESETS.keys()))
+selected_preset = st.sidebar.selectbox("Select Target IPO / Equity:", list(IPO_PRESETS.keys()), index=0)
 
 if selected_preset == "Custom Ticker (Enter Below)":
-    ticker_input = st.sidebar.text_input("Enter Yahoo Finance Ticker:", value="TCS.NS")
+    ticker_input = st.sidebar.text_input("Enter Yahoo Finance Ticker:", value="ITC.NS")
 else:
     ticker_input = IPO_PRESETS[selected_preset]
 
@@ -110,7 +112,7 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("""
 **Model Specification:**
 - **Target Variable:** $Open_{t+1}$ (Next-Day Open)
-- **Features (12):** OHLCV + Moving Averages + Inter-Day Returns + Intraday & Overnight Sentiment Gaps
+- **Features (22):** OHLCV + Moving Averages + EMAs + Multi-Day Returns + RSI + MACD + ATR + Sentiment Gaps
 - **Temporal Split:** 70% Train, 15% Validation, 15% Test
 """)
 
@@ -332,8 +334,9 @@ else:
 # -----------------------------------------------------------------------------
 # MAIN DASHBOARD UI
 # -----------------------------------------------------------------------------
-st.title(f"📈 Stock & IPO Trend Predictor: `{ticker_input}`")
-st.caption(f"Machine Learning Next-Day Opening Price Forecast ($Open_{{t+1}}$) | Last Market Close: {latest_row['Date'].strftime('%d-%b-%Y')}")
+company_heading = selected_preset if selected_preset != "Custom Ticker (Enter Below)" else f"Equity Ticker: {ticker_input}"
+st.title(f"📈 {company_heading}")
+st.caption(f"Machine Learning Next-Day Opening Price Forecast ($Open_{{t+1}}$) | Target Asset: `{ticker_input}` (NSE India) | Last Market Close: {latest_row['Date'].strftime('%d-%b-%Y')}")
 
 # Top Metric Cards (6 Columns)
 col1, col2, col3, col4, col5, col6 = st.columns(6)
@@ -421,6 +424,37 @@ st.markdown(f"""
     <div>
         <span style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">🏆 F1-Score</span><br>
         <span style="font-size: 20px; font-weight: 800; color: #a78bfa;">{active_f1:.3f}</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# -----------------------------------------------------------------------------
+# HERO PREDICTION HIGHLIGHT BANNER
+# -----------------------------------------------------------------------------
+st.markdown(f"""
+<div style="background: white; border-radius: 12px; padding: 18px 24px; border: 1px solid #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 22px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div style="min-width: 280px;">
+            <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">🎯 Landing Forecast Highlight</span>
+            <h3 style="margin: 4px 0 2px 0; color: #0f172a; font-size: 22px; font-weight: 800;">{company_heading}</h3>
+            <p style="margin: 0; color: #475569; font-size: 13.5px;">{trend_desc} &bull; Model: <strong>{active_model_name}</strong></p>
+        </div>
+        <div style="display: flex; gap: 28px; align-items: center; flex-wrap: wrap;">
+            <div style="text-align: right;">
+                <div style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Prior Close</div>
+                <div style="font-size: 22px; font-weight: 700; color: #334155;">₹{current_close:,.2f}</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Forecasted Open</div>
+                <div style="font-size: 28px; font-weight: 900; color: #0f172a;">₹{pred_next_open:,.2f}</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Signal</div>
+                <span style="display: inline-block; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 800; background: {'#dcfce7' if 'BULLISH' in trend_signal else '#fee2e2' if 'BEARISH' in trend_signal else '#fef3c7'}; color: {'#166534' if 'BULLISH' in trend_signal else '#991b1b' if 'BEARISH' in trend_signal else '#92400e'}; border: 1px solid {'#bbf7d0' if 'BULLISH' in trend_signal else '#fecaca' if 'BEARISH' in trend_signal else '#fde68a'};">
+                    {trend_signal}
+                </span>
+            </div>
+        </div>
     </div>
 </div>
 """, unsafe_allow_html=True)

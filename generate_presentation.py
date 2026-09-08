@@ -1,3 +1,4 @@
+# type: ignore
 """
 generate_presentation.py
 Generates a formal, minimal-color 10-slide PowerPoint (.pptx) presentation
