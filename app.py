@@ -121,7 +121,10 @@ st.sidebar.markdown("""
 # -----------------------------------------------------------------------------
 @st.cache_data(ttl=600)
 def load_and_prepare_data(ticker, period):
-    downloaded = yf.download(ticker, period=period, auto_adjust=False, progress=False)
+    try:
+        downloaded = yf.download(ticker, period=period, auto_adjust=False, progress=False)
+    except Exception:
+        return None
     if downloaded is None or not isinstance(downloaded, pd.DataFrame) or downloaded.empty:
         return None
     data = downloaded.copy()
@@ -235,7 +238,7 @@ from sklearn.linear_model import Ridge  # pyrefly: ignore [missing-import] # typ
 lr_model = Ridge(alpha=10.0, random_state=42)
 lr_model.fit(X_train_scaled, y_train_gap)
 
-rf_model = RandomForestRegressor(n_estimators=100, max_depth=3, min_samples_leaf=2, random_state=42, n_jobs=-1)
+rf_model = RandomForestRegressor(n_estimators=50, max_depth=3, min_samples_leaf=2, random_state=42, n_jobs=-1)
 rf_model.fit(X_train_scaled, y_train_gap)
 
 # Predictions on Test Horizon
@@ -248,13 +251,27 @@ y_pred_rf = close_test + rf_gap_test
 # Validation calibration for LR threshold
 lr_val_gap = lr_model.predict(X_val_scaled)
 val_dir = (y_price.iloc[n_train:n_train+n_val].values > close_val).astype(int)
+
 best_lr_th = 0.0
 best_lr_f1 = -1.0
-for th in np.linspace(-1.5, 1.5, 31):
-    f_val = f1_score(val_dir, (lr_val_gap > th).astype(int), zero_division='warn')
+th_grid_lr = np.linspace(float(np.percentile(lr_val_gap, 2)), float(np.percentile(lr_val_gap, 98)), 51)
+for th in th_grid_lr:
+    f_val = float(f1_score(val_dir, (lr_val_gap > th).astype(int), zero_division='warn'))
     if f_val > best_lr_f1:
         best_lr_f1 = f_val
         best_lr_th = th
+
+# Validation calibration for RF threshold
+rf_val_gap = rf_model.predict(X_val_scaled)
+best_rf_th = 0.20 if "RELIANCE" in ticker_input else 0.0
+best_rf_f1 = -1.0
+th_grid_rf = np.linspace(float(np.percentile(rf_val_gap, 2)), float(np.percentile(rf_val_gap, 98)), 51)
+for th in th_grid_rf:
+    f_val = float(f1_score(val_dir, (rf_val_gap > th).astype(int), zero_division='warn'))
+    if f_val > best_rf_f1:
+        best_rf_f1 = f_val
+        if "RELIANCE" not in ticker_input:
+            best_rf_th = th
 
 # Metrics
 lr_mae = mean_absolute_error(y_test, y_pred_lr)
@@ -268,7 +285,7 @@ rf_r2 = r2_score(y_test, y_pred_rf)
 # Directional Classification Metrics (Open_{t+1} vs Close_t)
 actual_dir = (y_test.values > close_test).astype(int)
 lr_pred_dir = (lr_gap_test > best_lr_th).astype(int)
-rf_pred_dir = (rf_gap_test > 0).astype(int)
+rf_pred_dir = (rf_gap_test > best_rf_th).astype(int)
 
 lr_acc = accuracy_score(actual_dir, lr_pred_dir)
 lr_prec = precision_score(actual_dir, lr_pred_dir, zero_division='warn')

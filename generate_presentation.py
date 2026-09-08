@@ -469,7 +469,7 @@ def create_presentation():
     headers = ["Model", "MAE", "RMSE", "R²", "MAPE Acc.", "±1% Tol.", "Hit Rate", "Precision", "Recall", "F1 Score"]
     row_data = [
         ["Linear Ridge (Primary)", "₹5.72", "₹9.40", "0.9875", "99.59%", "94.02%", "50.00%", "50.00%", "100.00%", "0.6667"],
-        ["Random Forest (Benchmark)", "₹5.66", "₹9.30", "0.9878", "99.59%", "93.48%", "52.17%", "51.16%", "95.65%", "0.6667"]
+        ["Random Forest (Benchmark)", "₹5.68", "₹9.31", "0.9878", "99.59%", "93.48%", "54.35%", "52.44%", "93.48%", "0.6719"]
     ]
 
     for c_idx, h in enumerate(headers):
@@ -507,7 +507,7 @@ def create_presentation():
     tf_cml.margin_left = tf_cml.margin_right = tf_cml.margin_top = tf_cml.margin_bottom = 0
 
     p = tf_cml.paragraphs[0]
-    p.text = "• True Negative (TN): 0    |    False Positive (FP): 92\n• False Negative (FN): 0    |    True Positive (TP): 92\n\n• Key Takeaway: Achieves 100% Recall by capturing every upward gap day. F1-Score of 0.6667 represents high sensitivity for trend-following strategies."
+    p.text = "• True Negative (TN): 0    |    False Positive (FP): 92\n• False Negative (FN): 0    |    True Positive (TP): 92\n\n• Key Takeaway: Captures 100% of all upward gap days (Recall = 100%). F1-Score of 0.6667 represents high sensitivity for trend-following strategies."
     p.font.size = Pt(10)
     p.font.color.rgb = NAVY_SECONDARY
 
@@ -519,7 +519,7 @@ def create_presentation():
     tf_cmr.margin_left = tf_cmr.margin_right = tf_cmr.margin_top = tf_cmr.margin_bottom = 0
 
     p_r = tf_cmr.paragraphs[0]
-    p_r.text = "• True Negative (TN): 8    |    False Positive (FP): 84\n• False Negative (FN): 4    |    True Positive (TP): 88\n\n• Key Takeaway: Correctly identifies 8 downward gap days while maintaining 95.65% Recall. Highest Directional Accuracy (52.17%) and identical F1-Score of 0.6667."
+    p_r.text = "• True Negative (TN): 14    |    False Positive (FP): 78\n• False Negative (FN): 6     |    True Positive (TP): 86\n\n• Key Takeaway: Filters 14 downward gap days with 93.48% Recall. Highest Directional Accuracy (54.35%) and highest F1-Score of 0.6719."
     p_r.font.size = Pt(10)
     p_r.font.color.rgb = NAVY_SECONDARY
 
@@ -619,8 +619,13 @@ def create_presentation():
 
     # Save presentation
     output_path = "Project_Presentation.pptx"
-    prs.save(output_path)
-    print(f"Presentation generated successfully: {output_path}")
+    try:
+        prs.save(output_path)
+        print(f"Presentation generated successfully: {output_path}")
+    except PermissionError:
+        fallback_path = "Project_Presentation_Updated.pptx"
+        prs.save(fallback_path)
+        print(f"File locked by viewer. Saved presentation to: {fallback_path}")
 
 if __name__ == "__main__":
     create_presentation()

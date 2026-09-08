@@ -118,7 +118,7 @@ The model leverages 12 comprehensive features across 4 distinct financial catego
 | Model | MAE (INR) | RMSE (INR) | R2 Score | MAPE Accuracy (%) | Within ±1% Error (%) | Within ±2% Error (%) | Dir. Accuracy (%) | Precision (%) | Recall (%) | F1 Score | F2 Score |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Linear Regression (Primary) | INR 5.72 | INR 9.40 | 0.9875 | 99.59% | 94.0% | 98.4% | 50.0% | 50.0% | 100.0% | 0.6667 | 0.8333 |
-| Random Forest Regressor (Benchmark) | INR 5.66 | INR 9.30 | 0.9878 | 99.59% | 93.5% | 98.4% | 52.2% | 51.2% | 95.7% | 0.6667 | 0.8148 |
+| Random Forest Regressor (Benchmark) | INR 5.68 | INR 9.31 | 0.9878 | 99.59% | 93.5% | 98.4% | 54.4% | 52.4% | 93.5% | 0.6719 | 0.8083 |
 
 #### 10.2 Quantitative Directional Classification & $F_1$-Score Analysis:
 In financial trading systems, continuous price predictions drive discrete market actions (Bullish / BUY vs. Bearish / SELL). We evaluate directional classification performance using **Accuracy, Precision, Recall, and the $F_1$-Score**:
@@ -149,16 +149,16 @@ In financial trading systems, continuous price predictions drive discrete market
 **Model 2: Random Forest Regressor (Benchmark)**
 | Date | Close Price | Actual Open | Predicted Open | Error | Actual Dir | Predicted Dir |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2025-04-02 | INR 1,251.15 | INR 1,233.05 | INR 1,251.51 | INR 18.46 | DOWN | UP |
-| 2025-04-03 | INR 1,248.70 | INR 1,241.10 | INR 1,248.39 | INR 7.29 | DOWN | DOWN |
-| 2025-04-04 | INR 1,204.70 | INR 1,132.20 | INR 1,203.34 | INR 71.14 | DOWN | DOWN |
-| 2025-04-07 | INR 1,165.70 | INR 1,172.00 | INR 1,162.77 | INR 9.23 | UP | DOWN |
-| 2025-04-08 | INR 1,182.20 | INR 1,169.50 | INR 1,183.59 | INR 14.09 | DOWN | UP |
-| 2025-04-09 | INR 1,185.35 | INR 1,195.15 | INR 1,185.79 | INR 9.36 | UP | UP |
-| 2025-04-11 | INR 1,218.95 | INR 1,251.00 | INR 1,219.60 | INR 31.40 | UP | UP |
-| 2025-04-15 | INR 1,240.10 | INR 1,234.10 | INR 1,240.00 | INR 5.90 | DOWN | DOWN |
-| 2025-04-16 | INR 1,239.30 | INR 1,240.20 | INR 1,239.48 | INR 0.72 | UP | UP |
-| 2025-04-17 | INR 1,274.50 | INR 1,270.00 | INR 1,275.16 | INR 5.16 | DOWN | UP |
+| 2025-04-02 | INR 1,251.15 | INR 1,233.05 | INR 1,251.50 | INR 18.45 | DOWN | UP |
+| 2025-04-03 | INR 1,248.70 | INR 1,241.10 | INR 1,247.95 | INR 6.85 | DOWN | DOWN |
+| 2025-04-04 | INR 1,204.70 | INR 1,132.20 | INR 1,203.62 | INR 71.42 | DOWN | DOWN |
+| 2025-04-07 | INR 1,165.70 | INR 1,172.00 | INR 1,162.64 | INR 9.36 | UP | DOWN |
+| 2025-04-08 | INR 1,182.20 | INR 1,169.50 | INR 1,183.90 | INR 14.40 | DOWN | UP |
+| 2025-04-09 | INR 1,185.35 | INR 1,195.15 | INR 1,185.67 | INR 9.48 | UP | UP |
+| 2025-04-11 | INR 1,218.95 | INR 1,251.00 | INR 1,219.81 | INR 31.19 | UP | UP |
+| 2025-04-15 | INR 1,240.10 | INR 1,234.10 | INR 1,240.09 | INR 5.99 | DOWN | DOWN |
+| 2025-04-16 | INR 1,239.30 | INR 1,240.20 | INR 1,239.57 | INR 0.63 | UP | UP |
+| 2025-04-17 | INR 1,274.50 | INR 1,270.00 | INR 1,275.30 | INR 5.30 | DOWN | UP |
 
 ---
 

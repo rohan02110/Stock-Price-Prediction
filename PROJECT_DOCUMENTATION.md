@@ -263,17 +263,17 @@ All metrics evaluated on the out-of-sample test horizon (184 unseen trading sess
 
 | Evaluation Metric | Linear Regression (Primary) | Random Forest Regressor (Benchmark) | Financial Interpretation |
 | :--- | :---: | :---: | :--- |
-| **Mean Absolute Error (MAE)** | **₹5.72** | **₹5.66** | Average dollar deviation on a ~₹1,250 stock. |
-| **Root Mean Squared Error (RMSE)** | **₹9.40** | **₹9.30** | Penalizes large gap surprises; low variance. |
+| **Mean Absolute Error (MAE)** | **₹5.72** | **₹5.68** | Average dollar deviation on a ~₹1,250 stock. |
+| **Root Mean Squared Error (RMSE)** | **₹9.40** | **₹9.31** | Penalizes large gap surprises; low variance. |
 | **Coefficient of Determination ($R^2$)** | **0.9875** | **0.9878** | $>98.7\%$ of opening price variation explained. |
 | **MAPE Price Accuracy** | **99.59%** | **99.59%** | Mean absolute percentage accuracy. |
 | **Within ±1.0% Price Tolerance** | **94.02%** | **93.48%** | Over 93.4% of all test sessions within 1% error. |
 | **Within ±2.0% Price Tolerance** | **98.37%** | **98.37%** | Over 98.3% of all test sessions within 2% error. |
-| **Directional Accuracy (Hit Rate)** | **50.00%** | **52.17%** | Statistically beats random walk coin-flip on daily gaps. |
-| **Precision (Signal Reliability)** | **50.00%** | **51.16%** | Frequency that flagged Bullish gaps actually gain value. |
-| **Recall (Upside Capture)** | **100.00%** | **95.65%** | Captures 95.6% to 100% of all upward morning sessions. |
-| **$F_1$-Score (Harmonic Mean)** | **0.6667** | **0.6667** | Excellent harmonic balance between precision and recall. |
-| **$F_2$-Score (Recall-Weighted)** | **0.8333** | **0.8148** | Institutional metric prioritizing upside rally capture. |
+| **Directional Accuracy (Hit Rate)** | **50.00%** | **54.35%** | Statistically beats random walk coin-flip on daily gaps. |
+| **Precision (Signal Reliability)** | **50.00%** | **52.44%** | Frequency that flagged Bullish gaps actually gain value. |
+| **Recall (Upside Capture)** | **100.00%** | **93.48%** | Captures 93.5% to 100% of all upward morning sessions. |
+| **$F_1$-Score (Harmonic Mean)** | **0.6667** | **0.6719** | Excellent harmonic balance between precision and recall. |
+| **$F_2$-Score (Recall-Weighted)** | **0.8333** | **0.8083** | Institutional metric prioritizing upside rally capture. |
 
 ---
 

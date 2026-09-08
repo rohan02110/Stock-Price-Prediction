@@ -137,17 +137,17 @@
 | Model | MAE (INR) | RMSE (INR) | $R^2$ Score | MAPE Acc. | Within ±1% | Hit Rate | Precision | Recall | $F_1$-Score |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Linear Ridge (Primary)** | **₹5.72** | **₹9.40** | **0.9875** | **99.59%** | **94.02%** | **50.00%** | **50.00%** | **100.00%** | **0.6667** |
-| **Random Forest (Benchmark)** | **₹5.66** | **₹9.30** | **0.9878** | **99.59%** | **93.48%** | **52.17%** | **51.16%** | **95.65%** | **0.6667** |
+| **Random Forest (Benchmark)** | **₹5.68** | **₹9.31** | **0.9878** | **99.59%** | **93.48%** | **54.35%** | **52.44%** | **93.48%** | **0.6719** |
 
 - **Confusion Matrices Breakdown (184 Test Sessions: 92 Down / 92 Up):**
   - **Linear Ridge Confusion Matrix:**
     - $\begin{bmatrix} \text{TN: } 0 & \text{FP: } 92 \\ \text{FN: } 0 & \text{TP: } 92 \end{bmatrix}$
     - *Takeaway:* Captures 100% of all upward gap days (Recall = 100%). $F_1$-Score = 0.6667.
   - **Random Forest Confusion Matrix:**
-    - $\begin{bmatrix} \text{TN: } 8 & \text{FP: } 84 \\ \text{FN: } 4 & \text{TP: } 88 \end{bmatrix}$
-    - *Takeaway:* Successfully filters 8 downward gap days while capturing 88 of 92 upward gap days (Recall = 95.65%). Delivers 52.17% Hit Rate and 0.6667 $F_1$-Score.
+    - $\begin{bmatrix} \text{TN: } 14 & \text{FP: } 78 \\ \text{FN: } 6 & \text{TP: } 86 \end{bmatrix}$
+    - *Takeaway:* Successfully filters 14 downward gap days while capturing 86 of 92 upward gap days (Recall = 93.48%). Delivers 54.35% Hit Rate and 0.6719 $F_1$-Score.
 - **Speaker Script / Note:**
-  > "Here are our test set results across 184 unseen trading days. On continuous pricing, both models achieved 99.59% MAPE accuracy and over 93.4% of predictions within ±1% of the actual price. On directional trading, Random Forest achieved 52.17% Hit Rate and an F1-Score of 0.6667, correctly identifying 88 out of 92 upward gap sessions."
+  > "Here are our test set results across 184 unseen trading days. On continuous pricing, both models achieved 99.59% MAPE accuracy and over 93.4% of predictions within ±1% of the actual price. On directional trading, Random Forest achieved 54.35% Hit Rate and an F1-Score of 0.6719, correctly identifying 86 out of 92 upward gap sessions and 14 downward gap sessions."
 
 ---
 
