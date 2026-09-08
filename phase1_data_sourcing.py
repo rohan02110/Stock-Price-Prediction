@@ -38,27 +38,36 @@ END_DATE = "2025-12-31"
 
 print(f"\nFetching historical OHLCV data for {TICKER} from {START_DATE} to {END_DATE} via yfinance...")
 
-# 3. Download Raw OHLCV Data
-ticker_data = yf.download(TICKER, start=START_DATE, end=END_DATE, auto_adjust=False, progress=False)
-
-# If multi-index columns returned by yfinance, flatten them
-if isinstance(ticker_data.columns, pd.MultiIndex):
-    ticker_data.columns = [col[0] for col in ticker_data.columns]
-
-# Reset index to have 'Date' as an explicit column
-raw_df = ticker_data.reset_index()
-
-# Ensure standard column naming and order
-required_cols = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
-raw_df = raw_df[[c for c in required_cols if c in raw_df.columns]]
-
-# Convert Date to standard string YYYY-MM-DD
-raw_df['Date'] = pd.to_datetime(raw_df['Date']).dt.strftime('%Y-%m-%d')
-
-# Save Raw Dataset
+# 3. Download Raw OHLCV Data with Offline Fallback
 raw_csv_path = os.path.join("outputs", "tables", "raw_data.csv")
-raw_df.to_csv(raw_csv_path, index=False)
-print(f"[OK] Raw dataset saved to {raw_csv_path}")
+raw_df = pd.DataFrame()
+try:
+    downloaded = yf.download(TICKER, start=START_DATE, end=END_DATE, auto_adjust=False, progress=False)
+    if downloaded is not None and isinstance(downloaded, pd.DataFrame) and not downloaded.empty:
+        ticker_data = downloaded.copy()
+        if isinstance(ticker_data.columns, pd.MultiIndex):
+            ticker_data.columns = [col[0] for col in ticker_data.columns]
+        temp_df = ticker_data.reset_index()
+        required_cols = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
+        temp_df = temp_df[[c for c in required_cols if c in temp_df.columns]]
+        date_series = pd.Series(pd.to_datetime(temp_df['Date']))
+        temp_df['Date'] = date_series.dt.strftime('%Y-%m-%d')
+        if len(temp_df) > 50:
+            raw_df = temp_df
+            raw_df.to_csv(raw_csv_path, index=False)
+            print(f"[OK] Raw dataset downloaded via yfinance and saved to {raw_csv_path}")
+        elif os.path.exists(raw_csv_path):
+            raw_df = pd.read_csv(raw_csv_path)
+            print(f"[OK] Loaded existing raw dataset from {raw_csv_path}")
+    elif os.path.exists(raw_csv_path):
+        raw_df = pd.read_csv(raw_csv_path)
+        print(f"[OK] Loaded existing raw dataset from {raw_csv_path}")
+except Exception as e:
+    if os.path.exists(raw_csv_path):
+        raw_df = pd.read_csv(raw_csv_path)
+        print(f"[NOTE] Network/yfinance notice ({e}). Loaded existing dataset from {raw_csv_path}")
+    else:
+        raise e
 
 # Display Summary Information
 print("\n" + "="*80)
@@ -67,7 +76,7 @@ print("="*80)
 print(f"Dataset Shape: {raw_df.shape[0]} trading days, {raw_df.shape[1]} columns")
 print(f"Date Range: {raw_df['Date'].min()} to {raw_df['Date'].max()}")
 print("\nData Types:")
-print(raw_df.dtypes.to_string())
+print(pd.Series(raw_df.dtypes).to_string())
 
 print("\n--- FIRST 5 ROWS ---")
 print(raw_df.head().to_string(index=False))
@@ -76,4 +85,5 @@ print("\n--- LAST 5 ROWS ---")
 print(raw_df.tail().to_string(index=False))
 
 print("\n--- DESCRIPTIVE STATISTICS (.describe()) ---")
-print(raw_df[['Open', 'High', 'Low', 'Close', 'Volume']].describe().round(2).to_string())
+stats_df = pd.DataFrame(raw_df[['Open', 'High', 'Low', 'Close', 'Volume']])
+print(stats_df.describe().round(2).to_string())

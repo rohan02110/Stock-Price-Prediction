@@ -46,7 +46,7 @@ print(f"[OK] Chronological sorting verified and missing values checked.")
 # A. Base OHLCV Features: Open, High, Low, Close, Volume
 # (Retained as primary price anchor points)
 
-# B. Inter-Day Momentum Indicators:
+# B. Inter-Day Momentum & Trend Indicators:
 # 1. 5-Day Simple Moving Average of Opening Price
 df['SMA_5_Open'] = df['Open'].rolling(window=5).mean()
 # 2. 10-Day Simple Moving Average of Opening Price
@@ -54,24 +54,56 @@ df['SMA_10_Open'] = df['Open'].rolling(window=10).mean()
 # 3. Daily Percentage Return (Inter-day closing price momentum)
 df['Daily_Return'] = ((df['Close'] - df['Close'].shift(1)) / df['Close'].shift(1)) * 100
 
-# C. Volatility Metrics:
-# 4. Daily Intraday Volatility Spread (High - Low)
+# 4. Multi-Day Return Momentum (1d, 2d, 3d, 5d)
+for lag in [1, 2, 3, 5]:
+    df[f'Return_{lag}d'] = df['Close'].pct_change(lag) * 100
+
+# 5. Exponential Moving Averages & Trend Divergence (EMA 9, EMA 21)
+df['EMA_9'] = df['Close'].ewm(span=9, adjust=False).mean()
+df['EMA_21'] = df['Close'].ewm(span=21, adjust=False).mean()
+df['EMA_Spread'] = df['EMA_9'] - df['EMA_21']
+
+# 6. Relative Strength Index (RSI 14)
+delta = df['Close'].diff()
+gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+rs = gain / (loss + 1e-6)
+df['RSI_14'] = 100 - (100 / (1 + rs))
+
+# 7. Moving Average Convergence Divergence (MACD 12, 26, 9)
+ema12 = df['Close'].ewm(span=12, adjust=False).mean()
+ema26 = df['Close'].ewm(span=26, adjust=False).mean()
+df['MACD'] = ema12 - ema26
+df['MACD_Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
+df['MACD_Hist'] = df['MACD'] - df['MACD_Signal']
+
+# C. Volatility & Spread Metrics:
+# 8. Daily Intraday Volatility Spread (High - Low)
 df['Daily_Volatility'] = df['High'] - df['Low']
-# 5. 10-Day Rolling Average Volatility Spread
+# 9. 10-Day Rolling Average Volatility Spread
 df['Rolling_Volatility_10'] = df['Daily_Volatility'].rolling(window=10).mean()
+# 10. Average True Range (ATR 14)
+hl = df['High'] - df['Low']
+hc = (df['High'] - df['Close'].shift(1)).abs()
+lc = (df['Low'] - df['Close'].shift(1)).abs()
+tr = pd.concat([hl, hc, lc], axis=1).max(axis=1)
+df['ATR_14'] = tr.rolling(window=14).mean()
 
 # D. Overnight & Intraday Market Sentiment Signals:
-# 6. Intraday Closing Sentiment (Close - Open) -> Bullish/Bearish session pressure
+# 11. Intraday Closing Sentiment (Close - Open) -> Bullish/Bearish session pressure
 df['Intraday_Sentiment'] = df['Close'] - df['Open']
-# 7. Previous Session Overnight Gap (Open_t - Close_{t-1}) -> Pre-market gap persistence
+# 12. Previous Session Overnight Gap (Open_t - Close_{t-1}) -> Pre-market gap persistence
 df['Overnight_Gap'] = df['Open'] - df['Close'].shift(1)
 
-# 4. Target Variable Creation: Next-Day Opening Price (Open_{t+1})
+# 4. Target Variable Creation: Next-Day Opening Price (Open_{t+1}) & Overnight Gap
 # Shift Open column by -1 day (lead of 1)
 df['Next_Day_Open'] = df['Open'].shift(-1)
+df['Target_Gap'] = df['Next_Day_Open'] - df['Close']
+df['Target_Direction'] = (df['Next_Day_Open'] > df['Close']).astype(int)
 
-# 5. Handle Boundary NaNs (drop first 10 rows for rolling windows, last 1 row for lead target)
+# 5. Handle Boundary NaNs (drop initial rolling window rows & final lead row)
 pre_drop_len = len(df)
+df = df.replace([np.inf, -np.inf], np.nan)
 df_clean = df.dropna().reset_index(drop=True)
 dropped_rows = pre_drop_len - len(df_clean)
 print(f"\n[OK] Dropped {dropped_rows} boundary rows containing NaNs from lag/lead/rolling operations.")
@@ -86,16 +118,16 @@ df_clean.to_csv(processed_csv_path, index=False)
 print(f"[OK] Processed dataset saved to: {processed_csv_path}")
 
 # 7. Display Sample Target Alignment Table
-sample_table = df_clean[['Date', 'Open', 'Close', 'Next_Day_Open']].copy()
-sample_table.columns = ['Date', "Today's Open", "Today's Close", 'Next-Day Open (Target)']
-
 print("\n" + "="*80)
 print("SAMPLE TARGET ALIGNMENT TABLE: NEXT-DAY OPENING PRICE (First 10 Rows)")
 print("="*80)
-preview_df = sample_table.head(10).copy()
-preview_df["Today's Open"] = preview_df["Today's Open"].map(lambda x: f"INR {x:,.2f}")
-preview_df["Today's Close"] = preview_df["Today's Close"].map(lambda x: f"INR {x:,.2f}")
-preview_df["Next-Day Open (Target)"] = preview_df["Next-Day Open (Target)"].map(lambda x: f"INR {x:,.2f}")
+preview_df = pd.DataFrame({
+    'Date': df_clean['Date'].head(10).values,
+    "Today's Open": [f"INR {float(x):,.2f}" for x in df_clean['Open'].head(10)],
+    "Today's Close": [f"INR {float(x):,.2f}" for x in df_clean['Close'].head(10)],
+    'Next-Day Open (Target)': [f"INR {float(x):,.2f}" for x in df_clean['Next_Day_Open'].head(10)],
+    'Target Direction (1=Up)': df_clean['Target_Direction'].head(10).values
+})
 print(preview_df.to_string(index=False))
 
 # 8. Feature Matrix (X) and Target Vector (y)
@@ -103,7 +135,10 @@ feature_cols = [
     'Open', 'High', 'Low', 'Close', 'Volume',
     'SMA_5_Open', 'SMA_10_Open', 'Daily_Return',
     'Daily_Volatility', 'Rolling_Volatility_10',
-    'Intraday_Sentiment', 'Overnight_Gap'
+    'Intraday_Sentiment', 'Overnight_Gap',
+    'RSI_14', 'MACD', 'MACD_Signal', 'MACD_Hist',
+    'EMA_Spread', 'Return_1d', 'Return_2d', 'Return_3d', 'Return_5d',
+    'ATR_14'
 ]
 X = df_clean[feature_cols]
 y = df_clean['Next_Day_Open']
@@ -118,9 +153,13 @@ print("\nFirst 5 Rows of Feature Matrix (X):")
 print(X.head().round(2).to_string())
 
 # 9. Correlation Heatmap Generation
-plt.figure(figsize=(12, 9))
+plt.figure(figsize=(14, 11))
 analysis_cols = feature_cols + ['Next_Day_Open']
-corr_matrix = df_clean[analysis_cols].corr()
+corr_matrix = pd.DataFrame(
+    np.corrcoef(df_clean[analysis_cols].values.astype(float), rowvar=False),
+    index=analysis_cols,
+    columns=analysis_cols
+)
 
 # Create Heatmap
 ax = sns.heatmap(
@@ -129,15 +168,15 @@ ax = sns.heatmap(
     fmt=".2f",
     cmap="coolwarm",
     cbar=True,
-    linewidths=0.6,
+    linewidths=1,
     linecolor='white',
     square=True,
-    annot_kws={"size": 9, "weight": "bold"}
+    annot_kws={"size": 7, "weight": "bold"}
 )
 
 plt.title("Feature Correlation Heatmap with Target Variable (Next-Day Open)", fontsize=13, fontweight='bold', pad=15)
-plt.xticks(rotation=45, ha='right', fontsize=9, fontweight='bold')
-plt.yticks(rotation=0, fontsize=9, fontweight='bold')
+plt.xticks(rotation=45, ha='right', fontsize=8, fontweight='bold')
+plt.yticks(rotation=0, fontsize=8, fontweight='bold')
 plt.tight_layout()
 
 heatmap_path = os.path.join("outputs", "charts", "correlation_heatmap.png")
@@ -149,6 +188,6 @@ print(f"\n[OK] Correlation heatmap generated and saved to: {heatmap_path}")
 print("\n" + "="*80)
 print("PEARSON CORRELATION WITH TARGET VARIABLE (Next_Day_Open)")
 print("="*80)
-corr_with_target = corr_matrix['Next_Day_Open'].sort_values(ascending=False)
+corr_with_target = pd.Series(corr_matrix['Next_Day_Open']).sort_values(ascending=False)
 for feat, score in corr_with_target.items():
     print(f"{feat:<25}: {score:+.4f}")

@@ -194,7 +194,7 @@ candidates = st.session_state["candidates"]
 # Action Button
 col_btn, col_info = st.columns([1, 2])
 with col_btn:
-    run_verify = st.button("🚀 Run AI Re-check & Filter False Positives", type="primary", use_container_width=True)
+    run_verify = st.button("🚀 Run AI Re-check & Filter False Positives", type="primary", width="stretch")
 
 with col_info:
     if not active_api_key:
@@ -291,16 +291,16 @@ with tab_visual:
     with col_raw:
         st.markdown("**1️⃣ Initial Detection Model (High False-Positive Rate)**")
         raw_annotated = pipeline.render_annotated_image(main_image, candidates, show_raw=True)
-        st.image(raw_annotated, caption="Raw Model Output: Intact windows with reflections falsely flagged as broken", use_container_width=True)
+        st.image(raw_annotated, caption="Raw Model Output: Intact windows with reflections falsely flagged as broken", width="stretch")
 
     with col_post:
         st.markdown("**2️⃣ Post-Gemini Vision & Pixelation Re-check (Accurate)**")
         if verified_list:
             verified_annotated = pipeline.render_annotated_image(main_image, verified_list, show_raw=False)
-            st.image(verified_annotated, caption="Re-verified Output: 🟢 Green = Intact Window Cleared | 🔴 Red = Confirmed Broken", use_container_width=True)
+            st.image(verified_annotated, caption="Re-verified Output: 🟢 Green = Intact Window Cleared | 🔴 Red = Confirmed Broken", width="stretch")
         else:
             st.info("Click '🚀 Run AI Re-check' to execute Vision AI verification and generate cleared annotations.")
-            st.image(main_image, caption="Awaiting verification...", use_container_width=True)
+            st.image(main_image, caption="Awaiting verification...", width="stretch")
 
 with tab_patches:
     st.subheader("Patch-Level Forensic Inspection (Original Crop | Pixelated Blocks | Edge Discontinuities)")
@@ -317,7 +317,7 @@ with tab_patches:
     patch = PatchProcessor.crop_element(main_image, active_cand.bbox)
     composite = PatchProcessor.create_inspection_composite(patch, pixel_size=pixel_size)
     
-    st.image(composite, caption=f"Element #{active_cand.element_id}: [Left] Original Crop | [Center] {pixel_size}px Block Pixelation | [Right] Edge Discontinuity Filter", use_container_width=True)
+    st.image(composite, caption=f"Element #{active_cand.element_id}: [Left] Original Crop | [Center] {pixel_size}px Block Pixelation | [Right] Edge Discontinuity Filter", width="stretch")
     
     if verified_list:
         st.markdown(f"""
@@ -336,7 +336,7 @@ with tab_audit:
         records = [c.to_dict() for c in verified_list]
         df_records = pd.DataFrame(records)
         
-        st.dataframe(df_records, use_container_width=True)
+        st.dataframe(df_records, width="stretch")
         
         col_dl1, col_dl2 = st.columns(2)
         with col_dl1:

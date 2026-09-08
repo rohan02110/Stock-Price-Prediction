@@ -1,26 +1,22 @@
-# 📈 Financial Machine Learning: Next-Day Stock Opening Price Prediction & Vision AI Damage Verification
+# 📈 Financial Machine Learning: Stock Market Next-Day Opening Price Prediction
 
-An end-to-end Machine Learning and Multimodal Vision AI system built for quantitative financial modeling, stock price forecasting, and computer vision forensic verification.
+An end-to-end quantitative Machine Learning pipeline and interactive financial dashboard built for stock price forecasting, directional trend modeling, and risk-adjusted momentum analysis.
 
 ---
 
-## 🌟 Key Highlights & Modules
+## 🌟 Key Highlights & Features
 
-### 1. 📊 Next-Day Stock Opening Price Predictor (`app.py`, `main.py`, Phases 1–5)
-- **Target Variable**: $Open_{t+1}$ (Next-Day Opening Price)
-- **Asset**: Reliance Industries Limited (`RELIANCE.NS`) across 2021–2025 trading sessions.
-- **Engineered Features**: 12 quantitative features including:
-  - Inter-day momentum (5-day & 10-day Open Simple Moving Averages, Percentage Daily Returns)
-  - Volatility metrics (Intraday High-Low spread, 10-day rolling volatility spread)
-  - Sentiment & overnight signals (Intraday close-to-open sentiment, overnight gap persistence)
-- **Model Evaluation**:
-  - **Linear Regression (Primary OLS)**: $R^2 = 0.9880$, $MAE = ₹5.69$, $RMSE = ₹9.33$
-  - **Random Forest Regressor (Ensemble)**: $R^2 = 0.9807$, $MAE = ₹8.77$, $RMSE = ₹11.81$
-- **Interactive UI**: Real-time Streamlit dashboard (`app.py`) with Plotly charts, IPO presets, live candlestick analysis, and trend gap signals.
-
-### 2. 🔍 Vision AI Broken Element & Window Re-Verification (`vision_damage_dashboard.py`, `broken_element_verifier.py`)
-- Two-stage forensic verification pipeline designed to eliminate false positives (e.g., reflective window glares, tree shadows, frame dividers falsely flagged as fractures).
-- Multi-scale patch block pixelation and Google Gemini Vision AI integration.
+- **Target Variable**: $Open_{t+1}$ (Next-Day Opening Price) and Directional Market Movement (Bullish / UP vs. Bearish / DOWN)
+- **Target Asset**: Reliance Industries Limited (`RELIANCE.NS`) across 2021–2025 trading sessions on the National Stock Exchange of India (NSE).
+- **12 Engineered Quantitative Features**:
+  - **Inter-day Momentum**: 5-Day and 10-Day Open Simple Moving Averages (`SMA_5_Open`, `SMA_10_Open`), Daily Percentage Returns (`Daily_Return`)
+  - **Volatility Metrics**: Daily High-Low price range (`Daily_Volatility`), 10-Day rolling volatility spread (`Rolling_Volatility_10`)
+  - **Sentiment & Gaps**: Intraday closing sentiment (`Intraday_Sentiment`), overnight opening gap persistence (`Overnight_Gap`)
+- **Rigorous Temporal Validation**: Strict chronological time-series partition (70% Train, 15% Validation, 15% Test) preventing lookahead bias.
+- **Multi-Metric Quantitative Evaluation**:
+  - Continuous Price Accuracy: MAE, RMSE, and $R^2$ Score
+  - Directional Trading Performance: Directional Hit Rate (Accuracy), Precision (drawdown defense), Recall (upside capture), and $F_2$-Score (opportunity-cost weighted)
+- **Interactive UI**: Real-time Streamlit dashboard (`app.py`) with Plotly candlestick charts, preset Indian equities/IPOs (Swiggy, Hyundai, Zomato, Reliance, Tata), technical overlays, and live pre-market gap forecasting.
 
 ---
 
@@ -28,9 +24,6 @@ An end-to-end Machine Learning and Multimodal Vision AI system built for quantit
 
 ```
 ├── app.py                             # Interactive Financial ML Streamlit Dashboard
-├── vision_damage_dashboard.py         # Forensic Vision AI Damage Verification Dashboard
-├── broken_element_verifier.py         # Multimodal Gemini Vision AI & Patch Verifier Engine
-├── test_reverification.py             # Vision AI pipeline CLI test suite
 ├── main.py                            # Master End-to-End Financial Modeling Pipeline
 │
 ├── phase1_data_sourcing.py            # Phase 1: Yahoo Finance Automated Data Acquisition
@@ -43,7 +36,6 @@ An end-to-end Machine Learning and Multimodal Vision AI system built for quantit
 │   ├── charts/                        # High-resolution academic charts & diagnostic plots
 │   ├── tables/                        # Processed datasets, test predictions & metrics summary
 │   ├── models/                        # Serialized models (.pkl) & scaler artifacts
-│   ├── vision_tests/                  # Synthetic facade & patch inspection outputs
 │   └── Final_Report.md                # Comprehensive academic project report
 │
 ├── requirements.txt                   # Project dependencies
@@ -66,19 +58,14 @@ python main.py
 
 ### 3. Launch Interactive Financial Dashboard
 ```bash
-streamlit run app.py
-```
-
-### 4. Launch Vision AI Verification Dashboard
-```bash
-streamlit run vision_damage_dashboard.py
+python -m streamlit run app.py
 ```
 
 ---
 
-## 📊 Evaluation Results Summary
+## 📊 Comprehensive Prediction Accuracy & Evaluation Summary
 
-| Model | MAE (INR) | RMSE (INR) | $R^2$ Score |
-| :--- | :---: | :---: | :---: |
-| **Linear Regression (Primary OLS)** | **₹5.69** | **₹9.33** | **0.9880** |
-| **Random Forest Regressor** | **₹8.77** | **₹11.81** | **0.9807** |
+| Model | MAE (INR) | RMSE (INR) | $R^2$ Score | MAPE Accuracy | Within ±1% Window | Within ±2% Window | Directional Hit Rate | Precision | Recall | $F_1$ Score | $F_2$ Score |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Linear Regression (Primary)** | **₹5.72** | **₹9.40** | **0.9875** | **99.59%** | **94.02%** | **98.37%** | **50.00%** | **50.00%** | **100.00%** | **0.6667** | **0.8333** |
+| **Random Forest Regressor (Ensemble)** | **₹5.66** | **₹9.30** | **0.9878** | **99.59%** | **93.48%** | **98.37%** | **52.17%** | **51.16%** | **95.65%** | **0.6667** | **0.8148** |

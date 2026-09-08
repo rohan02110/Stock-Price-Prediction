@@ -1,7 +1,8 @@
 [tool.pyrefly]
 search-paths = [
-    "C:/Users/Hp/PythonPortable/Lib/site-packages",
-    "C:/Users/Hp/PythonPortable"
+    "C:/Python314/Lib/site-packages",
+    "C:/Users/Rohan/AppData/Roaming/Python/Python314/site-packages",
+    "C:/Python314"
 ]
 disabled-rules = [
     "missing-import",
@@ -10,8 +11,9 @@ disabled-rules = [
 
 [tool.pyright]
 extraPaths = [
-    "C:/Users/Hp/PythonPortable/Lib/site-packages",
-    "C:/Users/Hp/PythonPortable"
+    "C:/Python314/Lib/site-packages",
+    "C:/Users/Rohan/AppData/Roaming/Python/Python314/site-packages",
+    "C:/Python314"
 ]
 reportMissingImports = "none"
 reportMissingTypeStubs = false

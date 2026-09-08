@@ -20,7 +20,10 @@ import matplotlib.pyplot as plt  # pyrefly: ignore [missing-import] # type: igno
 import matplotlib.dates as mdates  # pyrefly: ignore [missing-import] # type: ignore
 import seaborn as sns  # pyrefly: ignore [missing-import] # type: ignore
 import joblib  # pyrefly: ignore [missing-import] # type: ignore
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score  # pyrefly: ignore [missing-import] # type: ignore
+from sklearn.metrics import (  # pyrefly: ignore [missing-import] # type: ignore
+    mean_absolute_error, mean_squared_error, r2_score,
+    accuracy_score, precision_score, recall_score, f1_score, fbeta_score, confusion_matrix
+)
 
 # Configure academic, presentation-grade aesthetic style
 plt.style.use('seaborn-v0_8-whitegrid' if 'seaborn-v0_8-whitegrid' in plt.style.available else 'default')
@@ -51,6 +54,7 @@ actual_test = pred_df['Actual_Open_Price']
 lr_pred_test = pred_df['LR_Predicted_Open']
 rf_pred_test = pred_df['RF_Predicted_Open']
 
+# A. Continuous Regression Metrics
 lr_mae = mean_absolute_error(actual_test, lr_pred_test)
 lr_rmse = np.sqrt(mean_squared_error(actual_test, lr_pred_test))
 lr_r2 = r2_score(actual_test, lr_pred_test)
@@ -59,29 +63,91 @@ rf_mae = mean_absolute_error(actual_test, rf_pred_test)
 rf_rmse = np.sqrt(mean_squared_error(actual_test, rf_pred_test))
 rf_r2 = r2_score(actual_test, rf_pred_test)
 
+# B. Directional Classification Metrics (Accuracy, Precision, Recall, F1, F2-Score)
+# Ground truth direction: 1 = UP (Open_{t+1} > Close_t), 0 = DOWN (Open_{t+1} <= Close_t)
+if 'Actual_Direction' in pred_df.columns:
+    actual_dir = np.asarray(pred_df['Actual_Direction'], dtype=int)
+    lr_pred_dir = np.asarray(pred_df['LR_Predicted_Direction'], dtype=int)
+    rf_pred_dir = np.asarray(pred_df['RF_Predicted_Direction'], dtype=int)
+else:
+    close_vals = np.asarray(pred_df['Close_Price'].values if 'Close_Price' in pred_df.columns else df['Close'].iloc[-len(pred_df):].values, dtype=float)
+    actual_dir = (np.asarray(actual_test, dtype=float) > close_vals).astype(int)
+    lr_pred_dir = (np.asarray(lr_pred_test, dtype=float) > close_vals).astype(int)
+    rf_pred_dir = (np.asarray(rf_pred_test, dtype=float) > close_vals).astype(int)
+
+# Linear Regression Classification Metrics
+lr_acc = accuracy_score(actual_dir, lr_pred_dir)
+lr_prec = precision_score(actual_dir, lr_pred_dir, zero_division='warn')
+lr_rec = recall_score(actual_dir, lr_pred_dir, zero_division='warn')
+lr_f1 = f1_score(actual_dir, lr_pred_dir, zero_division='warn')
+lr_f2 = fbeta_score(actual_dir, lr_pred_dir, beta=2, zero_division='warn')
+
+# Random Forest Classification Metrics
+rf_acc = accuracy_score(actual_dir, rf_pred_dir)
+rf_prec = precision_score(actual_dir, rf_pred_dir, zero_division='warn')
+rf_rec = recall_score(actual_dir, rf_pred_dir, zero_division='warn')
+rf_f1 = f1_score(actual_dir, rf_pred_dir, zero_division='warn')
+rf_f2 = fbeta_score(actual_dir, rf_pred_dir, beta=2, zero_division='warn')
+
+# C. Price Estimation Accuracy & Tolerance Analysis
+actual_vals = np.asarray(actual_test, dtype=float)
+lr_pred_vals = np.asarray(lr_pred_test, dtype=float)
+rf_pred_vals = np.asarray(rf_pred_test, dtype=float)
+
+lr_pct_err = np.abs((actual_vals - lr_pred_vals) / actual_vals) * 100
+rf_pct_err = np.abs((actual_vals - rf_pred_vals) / actual_vals) * 100
+
+lr_mape = np.mean(lr_pct_err)
+rf_mape = np.mean(rf_pct_err)
+lr_mape_acc = 100 - lr_mape
+rf_mape_acc = 100 - rf_mape
+
+lr_within_1pct = (lr_pct_err <= 1.0).mean() * 100
+rf_within_1pct = (rf_pct_err <= 1.0).mean() * 100
+lr_within_2pct = (lr_pct_err <= 2.0).mean() * 100
+rf_within_2pct = (rf_pct_err <= 2.0).mean() * 100
+
 metrics_df = pd.DataFrame([
     {
         'Model': 'Linear Regression (Primary)',
         'MAE (INR)': round(lr_mae, 4),
         'RMSE (INR)': round(lr_rmse, 4),
-        'R2 Score': round(lr_r2, 4)
+        'R2 Score': round(lr_r2, 4),
+        'MAPE Accuracy (%)': round(lr_mape_acc, 2),
+        'Within ±1% Error (%)': round(lr_within_1pct, 2),
+        'Within ±2% Error (%)': round(lr_within_2pct, 2),
+        'Dir. Accuracy (%)': round(lr_acc * 100, 2),
+        'Precision (%)': round(lr_prec * 100, 2),
+        'Recall (%)': round(lr_rec * 100, 2),
+        'F1 Score': round(lr_f1, 4),
+        'F2 Score': round(lr_f2, 4)
     },
     {
         'Model': 'Random Forest Regressor (Benchmark)',
         'MAE (INR)': round(rf_mae, 4),
         'RMSE (INR)': round(rf_rmse, 4),
-        'R2 Score': round(rf_r2, 4)
+        'R2 Score': round(rf_r2, 4),
+        'MAPE Accuracy (%)': round(rf_mape_acc, 2),
+        'Within ±1% Error (%)': round(rf_within_1pct, 2),
+        'Within ±2% Error (%)': round(rf_within_2pct, 2),
+        'Dir. Accuracy (%)': round(rf_acc * 100, 2),
+        'Precision (%)': round(rf_prec * 100, 2),
+        'Recall (%)': round(rf_rec * 100, 2),
+        'F1 Score': round(rf_f1, 4),
+        'F2 Score': round(rf_f2, 4)
     }
 ])
 
+
 metrics_csv_path = os.path.join("outputs", "tables", "metrics_summary.csv")
 metrics_df.to_csv(metrics_csv_path, index=False)
-print(f"[OK] Metrics summary saved to: {metrics_csv_path}")
+print(f"[OK] Comprehensive metrics summary (Regression + Classification) saved to: {metrics_csv_path}")
 
 print("\n" + "="*80)
-print("MODEL EVALUATION METRICS COMPARISON (TARGET: NEXT-DAY OPENING PRICE)")
+print("COMPREHENSIVE MODEL EVALUATION METRICS (REGRESSION & DIRECTIONAL CLASSIFICATION)")
 print("="*80)
 print(metrics_df.to_string(index=False))
+
 
 # 3. Generate Visualizations Suite
 charts_dir = os.path.join("outputs", "charts")
@@ -214,3 +280,50 @@ residual_path = os.path.join(charts_dir, "residual_plot.png")
 plt.savefig(residual_path, dpi=300)
 plt.close()
 print(f"[OK] Saved: {residual_path}")
+
+# Chart 7: Directional Movement Confusion Matrices & Classification Metrics
+lr_cm = confusion_matrix(actual_dir, lr_pred_dir)
+rf_cm = confusion_matrix(actual_dir, rf_pred_dir)
+
+fig, (ax_cm1, ax_cm2) = plt.subplots(1, 2, figsize=(14, 6))
+
+def plot_cm(ax, cm, title, acc, prec, rec, f1, f2, cmap):
+    total = np.sum(cm)
+    group_counts = [f"{val:d}" for val in cm.flatten()]
+    group_percentages = [f"{val/total:.1%}" for val in cm.flatten()]
+    group_labels = ["True Negative (TN)", "False Positive (FP)", "False Negative (FN)", "True Positive (TP)"]
+    labels = [f"{v1}\n{v2}\n({v3})" for v1, v2, v3 in zip(group_labels, group_counts, group_percentages)]
+    labels = np.asarray(labels).reshape(2, 2)
+    
+    sns.heatmap(
+        cm, annot=labels, fmt='', cmap=cmap, cbar=False, ax=ax,
+        annot_kws={"size": 10, "weight": "bold"}
+    )
+    ax.set_xticks([0.5, 1.5])
+    ax.set_yticks([0.5, 1.5])
+    ax.set_xticklabels(['Pred DOWN (0)', 'Pred UP (1)'])
+    ax.set_yticklabels(['Actual DOWN (0)', 'Actual UP (1)'])
+    ax.set_title(title, pad=12, fontsize=12, fontweight='bold')
+    ax.set_xlabel("Predicted Direction", labelpad=8)
+    ax.set_ylabel("Actual Direction", labelpad=8)
+    
+    metrics_text = (
+        f"Accuracy: {acc*100:.1f}%  |  Precision: {prec*100:.1f}%\n"
+        f"Recall: {rec*100:.1f}%  |  F1: {f1:.4f}  |  F2 Score: {f2:.4f}"
+    )
+    ax.text(
+        0.5, -0.22, metrics_text, transform=ax.transAxes,
+        ha='center', va='center', fontsize=10, fontweight='bold',
+        bbox=dict(boxstyle='round,pad=0.5', facecolor='#f8f9fa', edgecolor='#ced4da')
+    )
+
+plot_cm(ax_cm1, lr_cm, "Linear Regression (Primary OLS)\nDirectional Confusion Matrix", lr_acc, lr_prec, lr_rec, lr_f1, lr_f2, "Blues")
+plot_cm(ax_cm2, rf_cm, "Random Forest Regressor (Benchmark)\nDirectional Confusion Matrix", rf_acc, rf_prec, rf_rec, rf_f1, rf_f2, "Reds")
+
+plt.suptitle("Chart 7: Directional Market Classification & F1-Score Diagnostic Matrix", fontsize=14, fontweight='bold', y=1.03)
+plt.tight_layout()
+chart7_path = os.path.join(charts_dir, "chart7_confusion_matrices.png")
+plt.savefig(chart7_path, dpi=300, bbox_inches='tight')
+plt.close()
+print(f"[OK] Saved: {chart7_path}")
+
